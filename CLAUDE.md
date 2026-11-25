@@ -10,6 +10,10 @@ There is no test suite or linter. Work is checked by running against real phones
 
 Branches: `stable/v1` (tag `v1.0.0`) is the released Syncthing-based version and takes fixes only. `main` is where the redesign happens. `widget/photosync.keystore` and `apk/` are deliberately not in git; the built Photo Sync APK is attached to GitHub releases.
 
+## Planned redesign
+
+`PLAN.md` (Android) and `PLAN-IOS.md` (iOS) describe a planned move to one standalone app. They are proposals: check their "Open decisions" sections with the user before implementing. `design/` holds the mockups as standalone HTML (open `design/index.html`); `design/README.md` has the colour tokens and the command that regenerates `design/screenshots/`. Everything below describes v1, the code that exists today.
+
 ## Commands
 
 ```bash

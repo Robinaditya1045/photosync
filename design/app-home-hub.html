@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home on the hub</title>
+<link rel="stylesheet" href="fonts.css">
+<style>
+body{margin:0}
+a{color:#3DDC97;text-decoration:none}a:hover{color:#7BE8B8}
+</style>
+</head>
+<body>
+<div style="width: 390px; height: 844px; box-sizing: border-box; padding: 56px 20px 24px; background: #0E0F12; color: #F4F5F7; font-family: 'Inter', system-ui, sans-serif; display: flex; flex-direction: column; gap: 20px">
+  <div style="display: flex; align-items: center; justify-content: space-between; height: 44px">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true">
+        <rect x="8" y="2.5" width="13" height="13" rx="3.5" fill="#3DDC97" opacity="0.45" transform="rotate(9 14.5 9)"></rect>
+        <rect x="3" y="7" width="14.5" height="14.5" rx="4" fill="#3DDC97"></rect>
+        <circle cx="8" cy="12" r="1.7" fill="#0E0F12"></circle>
+        <path d="M5.5 18.5l3.8-3.4 2.8 2.3 2.4-1.9" fill="none" stroke="#0E0F12" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      <span style="font-family: 'Bricolage Grotesque', 'Trebuchet MS', system-ui, sans-serif; font-size: 19px; font-weight: 700; letter-spacing: -0.01em">Photo Sync</span>
+      <span style="padding: 3px 9px; border-radius: 999px; background: #12382A; color: #3DDC97; font-size: 12px; font-weight: 700">Hub</span>
+    </div>
+    <button type="button" aria-label="Settings" style="width: 44px; height: 44px; margin-right: -8px; padding: 0; border: 0; border-radius: 50%; background: transparent; display: grid; place-items: center; cursor: pointer">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F4F5F7" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 7.5h9"></path>
+        <path d="M18.5 7.5H20"></path>
+        <circle cx="15.8" cy="7.5" r="2.4"></circle>
+        <path d="M4 16.5h1.5"></path>
+        <path d="M11 16.5h9"></path>
+        <circle cx="8.2" cy="16.5" r="2.4"></circle>
+      </svg>
+    </button>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: 28px; background: #16171B">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-family: 'Bricolage Grotesque', 'Trebuchet MS', system-ui, sans-serif; font-size: 60px; font-weight: 800; line-height: 0.95; letter-spacing: -0.035em">9.2 GB</span>
+      <span style="font-size: 16px; font-weight: 600">free on this Pixel</span>
+    </div>
+    <div role="img" aria-label="22.8 of 32 GB used" style="height: 10px; border-radius: 5px; background: #2C2F37; display: flex">
+      <div style="width: 71%; border-radius: 5px; background: #3DDC97"></div>
+    </div>
+    <span style="font-size: 13px; font-weight: 500; line-height: 1.4; color: #A9ADB8">Google Photos uploads what arrives here. When space runs low, free it up there.</span>
+    <button type="button" style="height: 48px; border: 0; border-radius: 16px; background: #24262C; color: #F4F5F7; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; font-weight: 700; cursor: pointer">Open Google Photos</button>
+  </div>
+
+  <div style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px">
+      <span style="font-family: 'Bricolage Grotesque', 'Trebuchet MS', system-ui, sans-serif; font-size: 18px; font-weight: 700; letter-spacing: -0.01em">Phones</span>
+      <a href="#add-phone" style="font-size: 14px; font-weight: 600">Add a phone</a>
+    </div>
+    <div style="display: flex; flex-direction: column; padding: 4px 18px; border-radius: 24px; background: #16171B">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 16px; font-weight: 600">Redmi</span>
+          <span style="font-size: 13px; font-weight: 500; color: #A9ADB8">All received</span>
+        </div>
+        <svg width="28" height="28" viewBox="0 0 28 28" role="img" aria-label="All received">
+          <circle cx="14" cy="14" r="12" fill="#3DDC97"></circle>
+          <path d="M8.6 14.6l3.6 3.5 7.2-7.4" fill="none" stroke="#0B2A1C" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; border-top: 1px solid #24262C">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 16px; font-weight: 600">Galaxy</span>
+          <span style="font-size: 13px; font-weight: 500; color: #A9ADB8">Receiving · 128 left</span>
+        </div>
+        <svg width="28" height="28" viewBox="0 0 28 28" role="img" aria-label="Receiving, 71 percent">
+          <circle cx="14" cy="14" r="11" fill="none" stroke="#3A3D46" stroke-width="4"></circle>
+          <circle cx="14" cy="14" r="11" fill="none" stroke="#8C9BFF" stroke-width="4" stroke-linecap="round" pathLength="100" stroke-dasharray="71 100" transform="rotate(-90 14 14)"></circle>
+        </svg>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; border-top: 1px solid #24262C">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 16px; font-weight: 600">Tablet</span>
+          <span style="font-size: 13px; font-weight: 500; color: #A9ADB8">All received</span>
+        </div>
+        <svg width="28" height="28" viewBox="0 0 28 28" role="img" aria-label="All received">
+          <circle cx="14" cy="14" r="12" fill="#3DDC97"></circle>
+          <path d="M8.6 14.6l3.6 3.5 7.2-7.4" fill="none" stroke="#0B2A1C" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 58px; border-top: 1px solid #24262C">
+        <div style="display: flex; flex-direction: column; gap: 2px">
+          <span style="font-size: 16px; font-weight: 600">Phone 4</span>
+          <span style="font-size: 13px; font-weight: 500; color: #A9ADB8">Not seen for 3 days</span>
+        </div>
+        <svg width="28" height="28" viewBox="0 0 28 28" role="img" aria-label="Not seen lately">
+          <path d="M9 14h10" fill="none" stroke="#6A6F7C" stroke-width="3" stroke-linecap="round"></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <button type="button" style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; border: 0; border-radius: 24px; background: #16171B; color: #F4F5F7; font-family: 'Inter', system-ui, sans-serif; text-align: left; cursor: pointer">
+    <div style="display: flex; flex-direction: column; gap: 2px">
+      <span style="font-size: 16px; font-weight: 600">Google Photos backup</span>
+      <span style="font-size: 13px; font-weight: 500; color: #A9ADB8">Check it's on, at Original quality</span>
+    </div>
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A9ADB8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M9 5l7 7-7 7"></path>
+    </svg>
+  </button>
+</div>
+</body>
+</html>
