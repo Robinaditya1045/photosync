@@ -1,0 +1,258 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# photosync: switch photo sync ON / OFF / AUTO and show its status.
+# Runs inside Termux on a source phone; the home-screen widget buttons call it.
+#
+#   photosync on        sync now, even away from home Wi-Fi (may use mobile data)
+#   photosync off       stop syncing until you press ON or AUTO
+#   photosync auto      back to normal: sync only on home Wi-Fi
+#   photosync status    what is left to send to the Pixel (notification + toast)
+#   photosync setkey    save the Syncthing API key (reads it from the clipboard)
+set -uo pipefail
+
+# Widget and notification actions start without Termux's environment: derive it from
+# where this script is installed ($PREFIX/bin/photosync).
+if [[ -z ${PREFIX:-} ]]; then
+  case $0 in */bin/*) PREFIX=${0%/bin/*} ;; *) PREFIX=/data/data/com.termux/files/usr ;; esac
+fi
+export PATH="$PREFIX/bin:${PATH:-}"
+export HOME=${HOME:-${PREFIX%/usr}/home}
+
+PKG=com.github.catfriend1.syncthingfork
+RECEIVER=$PKG/com.nutomic.syncthingandroid.receiver.AppConfigReceiver
+API=${PHOTOSYNC_API:-https://127.0.0.1:8384}
+CONF_DIR=${PHOTOSYNC_CONF_DIR:-$HOME/.config/photosync}
+KEY_FILE=$CONF_DIR/apikey
+MODE_FILE=$CONF_DIR/mode
+SELF=$(realpath "$0" 2>/dev/null || echo "$0")
+HINT="If this keeps happening: Syncthing > Settings > Behaviour > turn on 'Service Control by Broadcast'."
+NL=$'\n'
+
+mkdir -p "$CONF_DIR"
+API_KEY=$(cat "$KEY_FILE" 2>/dev/null || true)
+
+usage() { awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$SELF"; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+# --- output ---------------------------------------------------------------------
+popup() { if have termux-toast; then termux-toast -s "$1" >/dev/null 2>&1 || true; fi; }
+toast() { echo "$1"; popup "$1"; }
+
+notify() {  # title body: one notification that doubles as a control panel
+  printf '%s\n%s\n' "$1" "$2"
+  have termux-notification || return 0
+  termux-notification --id photosync --alert-once --icon sync \
+    --title "$1" --content "$2" \
+    --action "$SELF status" \
+    --button1 "ON"   --button1-action "$SELF on" \
+    --button2 "OFF"  --button2-action "$SELF off" \
+    --button3 "AUTO" --button3-action "$SELF auto" >/dev/null 2>&1 || true
+}
+
+hbytes() {
+  awk -v b="$1" 'BEGIN { split("B KB MB GB TB", u); i = 1
+    while (b >= 1024 && i < 5) { b /= 1024; i++ }
+    printf (i == 1 ? "%d %s" : "%.1f %s"), b, u[i] }'
+}
+
+ago() {  # RFC3339 timestamp -> "5 min ago"
+  local t d
+  t=$(date -d "$1" +%s 2>/dev/null) || { echo "unknown"; return; }
+  (( t < 86400 )) && { echo "never"; return; }
+  d=$(( $(date +%s) - t ))
+  if   (( d < 90 ));     then echo "just now"
+  elif (( d < 5400 ));   then echo "$(( d / 60 )) min ago"
+  elif (( d < 172800 )); then echo "$(( d / 3600 )) h ago"
+  else                        echo "$(( d / 86400 )) days ago"
+  fi
+}
+
+set_mode() { echo "$1 $(date +%s)" > "$MODE_FILE"; }
+mode_line() {
+  local m t
+  if [[ -f $MODE_FILE ]] && read -r m t < "$MODE_FILE"; then
+    echo "Switch: $m (set $(date -d "@$t" '+%d %b %H:%M' 2>/dev/null))"
+  else
+    echo "Switch: AUTO (default)"
+  fi
+}
+
+# --- Syncthing ------------------------------------------------------------------
+api() {  # path [extra curl args]
+  local path=$1; shift
+  curl -sk --max-time 8 -H "X-API-Key: $API_KEY" "$@" "$API$path"
+}
+api_code() {  # 000 = not running, 200 = ok, 401/403 = bad key
+  curl -sk --max-time 5 -o /dev/null -w '%{http_code}' -H "X-API-Key: $API_KEY" "$API/rest/system/ping"
+}
+
+send() {  # START | STOP | FOLLOW, same switch as Syncthing's own quick-settings tile
+  if ! am broadcast -a "$PKG.action.$1" -n "$RECEIVER" >/dev/null 2>&1; then
+    toast "Could not reach the Syncthing app (is it installed?)"
+    exit 1
+  fi
+}
+
+wait_api() {  # up|down max-seconds
+  local i code
+  for (( i = 0; i < $2; i += 2 )); do
+    code=$(api_code)
+    [[ $1 == up   && $code != 000 ]] && return 0
+    [[ $1 == down && $code == 000 ]] && return 0
+    sleep 2
+  done
+  return 1
+}
+
+# Sets R_TITLE / R_BODY from Syncthing's view of what each peer (the Pixel) still needs.
+# "Done" = nothing left to transfer. Deletions the Pixel deliberately ignores
+# (ignoreDelete) are reported separately, so they never make it look unfinished.
+build_report() {
+  local me devs conns stats folders
+  me=$(api /rest/system/status | jq -r '.myID // empty' 2>/dev/null)
+  devs=$(api /rest/config/devices)
+  conns=$(api /rest/system/connections)
+  stats=$(api /rest/stats/device)
+  folders=$(api /rest/config/folders)
+  if [[ -z $me ]] || ! jq -e 'type == "array"' >/dev/null 2>&1 <<<"$folders"; then
+    R_TITLE="⚠ Photo sync: could not read status"
+    R_BODY="Syncthing is running but did not answer properly. Try again in a minute."
+    return
+  fi
+
+  local -a lines=() dids=()
+  local -A peers=()
+  local left_items=0 left_bytes=0 deletes=0 shared=0 blocked=0
+  local fid label paused did name comp g ni nb nd rs tag
+
+  while IFS=$'\t' read -r fid label paused; do
+    if [[ $paused == true ]]; then lines+=("$label: paused on this phone"); continue; fi
+    mapfile -t dids < <(jq -r --arg f "$fid" --arg me "$me" \
+      '.[] | select(.id == $f) | .devices[].deviceID | select(. != $me)' <<<"$folders")
+    if (( ${#dids[@]} == 0 )); then lines+=("$label: not shared with the Pixel"); continue; fi
+
+    for did in "${dids[@]}"; do
+      shared=1; peers[$did]=1
+      tag=$label
+      if (( ${#dids[@]} > 1 )); then
+        name=$(jq -r --arg d "$did" '.[] | select(.deviceID == $d) | .name' <<<"$devs")
+        tag="$label → $name"
+      fi
+      comp=$(api /rest/db/completion --get --data-urlencode "folder=$fid" --data-urlencode "device=$did")
+      if ! IFS=$'\t' read -r g ni nb nd rs < <(jq -r \
+          '[.globalItems // 0, .needItems // 0, .needBytes // 0, .needDeletes // 0, .remoteState // "unknown"] | @tsv' \
+          <<<"$comp" 2>/dev/null); then
+        lines+=("$tag: status unavailable"); continue
+      fi
+      deletes=$(( deletes + nd ))
+      case $rs in
+        paused)     lines+=("$tag: paused on the Pixel"); blocked=1 ;;
+        notSharing) lines+=("$tag: not accepted on the Pixel yet"); blocked=1 ;;
+        *)
+          if (( ni > 0 || nb > 0 )); then
+            left_items=$(( left_items + ni )); left_bytes=$(( left_bytes + nb ))
+            lines+=("$tag: $ni of $g files left ($(hbytes "$nb"))")
+          else
+            lines+=("$tag: all $g files on the Pixel")
+          fi ;;
+      esac
+    done
+  done < <(jq -r '.[] | [.id, (if (.label // "") == "" then .id else .label end), .paused] | @tsv' <<<"$folders")
+
+  local connected=0 seen
+  for did in "${!peers[@]}"; do
+    name=$(jq -r --arg d "$did" '(.[] | select(.deviceID == $d) | .name) // $d[0:7]' <<<"$devs")
+    if [[ $(jq -r --arg d "$did" '.connections[$d].connected // false' <<<"$conns") == true ]]; then
+      connected=1; lines+=("$name: connected")
+    else
+      seen=$(jq -r --arg d "$did" '.[$d].lastSeen // empty' <<<"$stats")
+      lines+=("$name: offline, last seen $(ago "${seen:-0001-01-01T00:00:00Z}")")
+    fi
+  done
+
+  if (( ! shared )); then
+    R_TITLE="⚠ No folders are shared with the Pixel yet"
+  elif (( left_items > 0 || left_bytes > 0 )); then
+    if (( connected )); then R_TITLE="⏳ Sending to Pixel: $left_items files ($(hbytes "$left_bytes")) left"
+    else                     R_TITLE="⏸ $left_items files waiting, Pixel not connected"; fi
+  elif (( blocked )); then
+    R_TITLE="⚠ The Pixel is not receiving every folder"
+  elif (( connected )); then
+    R_TITLE="✅ All photos are on the Pixel"
+  else
+    R_TITLE="✅ All photos are on the Pixel (as of last contact)"
+  fi
+
+  (( deletes > 0 )) && lines+=("$deletes deleted here, kept on the Pixel on purpose")
+  lines+=("$(mode_line)")
+  R_BODY=$(printf '%s\n' "${lines[@]}"); R_BODY=${R_BODY%$NL}
+}
+
+# --- commands -------------------------------------------------------------------
+cmd_status() {
+  local quiet=${1:-} title body
+  if [[ -z $API_KEY ]]; then
+    notify "⚠ Photo sync: API key not set" "Open Termux and run: photosync setkey"
+    return
+  fi
+  case $(api_code) in
+    000)     title="⏸ Photo sync is not running"
+             body="It is switched OFF, or it is on AUTO and this phone is not on home Wi-Fi.${NL}$(mode_line)" ;;
+    401|403) title="⚠ Photo sync: API key rejected"
+             body="Open Termux and run: photosync setkey" ;;
+    200)     build_report; title=$R_TITLE; body=$R_BODY ;;
+    *)       title="⚠ Photo sync: unexpected reply from Syncthing"; body=$(mode_line) ;;
+  esac
+  [[ $quiet == quiet ]] || popup "$title"
+  notify "$title" "$body"
+}
+
+cmd_on() {
+  send START; set_mode ON
+  toast "Photo sync ON: syncing now, even away from home Wi-Fi"
+  if wait_api up 30; then sleep 3; cmd_status quiet   # give it a moment to reach the Pixel
+  else notify "⚠ Photo sync did not start" "$HINT"; fi
+}
+
+cmd_off() {
+  send STOP; set_mode OFF
+  toast "Photo sync OFF"
+  if wait_api down 20; then cmd_status quiet
+  else notify "⚠ Photo sync is still running" "$HINT"; fi
+}
+
+cmd_auto() {
+  send FOLLOW; set_mode AUTO
+  toast "Photo sync AUTO: syncs only on home Wi-Fi"
+  sleep 6; cmd_status quiet
+}
+
+cmd_setkey() {
+  local key=${1:-}
+  if [[ -z $key ]] && have termux-clipboard-get; then
+    key=$(termux-clipboard-get 2>/dev/null | tr -d '[:space:]')
+    if [[ $key =~ ^[A-Za-z0-9_-]{16,}$ ]]; then echo "Using the API key from the clipboard."; else key=""; fi
+  fi
+  if [[ -z $key ]]; then
+    echo "In Syncthing: Settings > Syncthing Options > tap 'Syncthing API Key' to copy it."
+    read -r -p "Paste the API key here: " key
+    key=$(tr -d '[:space:]' <<<"$key")
+  fi
+  [[ $key =~ ^[A-Za-z0-9_-]{16,}$ ]] || { echo "That doesn't look like a Syncthing API key." >&2; return 1; }
+  (umask 077; printf '%s\n' "$key" > "$KEY_FILE")
+  API_KEY=$key
+  case $(api_code) in
+    200) echo "API key works." ;;
+    000) echo "Saved. Syncthing isn't running right now, so the key will be checked later." ;;
+    *)   echo "Saved, but Syncthing rejected it. Copy it again and run: photosync setkey" ;;
+  esac
+}
+
+case ${1:-status} in
+  on)          cmd_on ;;
+  off)         cmd_off ;;
+  auto)        cmd_auto ;;
+  status)      cmd_status "${2:-}" ;;
+  setkey)      cmd_setkey "${2:-}" ;;
+  -h|--help|help) usage ;;
+  *)           usage >&2; exit 1 ;;
+esac

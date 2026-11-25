@@ -1,0 +1,15 @@
+# Build output
+widget/build/
+
+# Downloaded and built APKs. The built Photo Sync APK is attached to GitHub releases.
+apk/
+
+# Signing key. Keep a private backup: app updates must be signed with the same key.
+*.keystore
+*.jks
+
+# Editor and OS noise
+.idea/
+*.iml
+local.properties
+.DS_Store

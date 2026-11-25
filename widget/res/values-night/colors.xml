@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="surface">#16161A</color>
+    <color name="surface_alt">#1C1C21</color>
+    <color name="border">#2A2A31</color>
+    <color name="text1">#EDEDF0</color>
+    <color name="text2">#A3A3AD</color>
+    <color name="text3">#6F6F7A</color>
+    <color name="track">#2A2A31</color>
+    <color name="seg_track">#1E1E23</color>
+    <color name="seg_selected">#2E2E36</color>
+    <color name="seg_border">#3A3A43</color>
+    <color name="green">#4CB782</color>
+    <color name="muted">#6F6F7A</color>
+</resources>

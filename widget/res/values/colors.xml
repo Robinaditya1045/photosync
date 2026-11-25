@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Light -->
+    <color name="surface">#FFFFFF</color>
+    <color name="surface_alt">#F7F7F8</color>
+    <color name="border">#E6E6EA</color>
+    <color name="text1">#1B1B1F</color>
+    <color name="text2">#5E5E68</color>
+    <color name="text3">#8C8C96</color>
+    <color name="track">#ECECF0</color>
+    <color name="seg_track">#F2F2F5</color>
+    <color name="seg_selected">#FFFFFF</color>
+    <color name="seg_border">#DFDFE5</color>
+
+    <!-- Status colours, same in light and dark -->
+    <color name="accent">#5E6AD2</color>
+    <color name="green">#3FA36F</color>
+    <color name="amber">#E28A2F</color>
+    <color name="red">#E5484D</color>
+    <color name="muted">#9A9AA4</color>
+    <color name="on_accent">#FFFFFF</color>
+</resources>

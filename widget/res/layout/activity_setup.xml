@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="28dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="28dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="sans-serif-medium"
+            android:text="Photo Sync"
+            android:textColor="@color/text1"
+            android:textSize="24sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="20dp"
+            android:lineSpacingExtra="2dp"
+            android:text="Shows what this phone still has to send to the Pixel, and lets you switch syncing from the home screen."
+            android:textColor="@color/text2"
+            android:textSize="14sp" />
+
+        <!-- 1. Broadcast control -->
+        <LinearLayout style="@style/Card">
+            <LinearLayout style="@style/StepHead">
+                <TextView style="@style/StepBadge" android:text="1" />
+                <TextView style="@style/StepTitle" android:text="Allow switching" />
+                <TextView android:id="@+id/step1_state" style="@style/StepState" />
+            </LinearLayout>
+            <TextView style="@style/StepBody"
+                android:text="In Syncthing, open Settings → Behaviour and turn on “Service Control by Broadcast”." />
+            <TextView android:id="@+id/open_syncthing" style="@style/BtnSecondary"
+                android:text="Open Syncthing" />
+        </LinearLayout>
+
+        <!-- 2. API key -->
+        <LinearLayout style="@style/Card">
+            <LinearLayout style="@style/StepHead">
+                <TextView style="@style/StepBadge" android:text="2" />
+                <TextView style="@style/StepTitle" android:text="Connect to Syncthing" />
+                <TextView android:id="@+id/step2_state" style="@style/StepState" />
+            </LinearLayout>
+            <TextView style="@style/StepBody"
+                android:text="In Syncthing, open Settings → Syncthing Options and tap “Syncthing API Key” to copy it. Then paste it here." />
+
+            <EditText
+                android:id="@+id/key"
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/input_bg"
+                android:fontFamily="monospace"
+                android:hint="API key"
+                android:importantForAutofill="no"
+                android:inputType="text|textNoSuggestions"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:singleLine="true"
+                android:textColor="@color/text1"
+                android:textColorHint="@color/text3"
+                android:textSize="13sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView android:id="@+id/paste" style="@style/BtnSecondary"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginTop="0dp"
+                    android:text="Paste" />
+
+                <TextView android:id="@+id/save" style="@style/BtnPrimary"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:text="Save &amp; test" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/key_result"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:textColor="@color/text2"
+                android:textSize="13sp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <!-- 3. Widget -->
+        <LinearLayout style="@style/Card">
+            <LinearLayout style="@style/StepHead">
+                <TextView style="@style/StepBadge" android:text="3" />
+                <TextView style="@style/StepTitle" android:text="Add the widget" />
+                <TextView android:id="@+id/step3_state" style="@style/StepState" />
+            </LinearLayout>
+            <TextView android:id="@+id/widget_body" style="@style/StepBody"
+                android:text="Long-press the home screen → Widgets → Photo Sync." />
+            <TextView android:id="@+id/add_widget" style="@style/BtnPrimary"
+                android:text="Add to home screen" />
+        </LinearLayout>
+
+        <!-- What the switch does -->
+        <LinearLayout style="@style/Card">
+            <TextView style="@style/StepTitle"
+                android:layout_width="match_parent"
+                android:layout_weight="0"
+                android:layout_marginStart="0dp"
+                android:text="The switch" />
+            <TextView style="@style/StepBody"
+                android:text="Auto: syncs only on home Wi-Fi. This is the normal setting.\nOn: syncs right now, even away from home. It can use mobile data.\nOff: stops syncing until you choose Auto or On." />
+            <TextView style="@style/StepBody"
+                android:textColor="@color/text3"
+                android:text="Tap the widget's status to refresh it. While photos are being sent it refreshes every minute; otherwise every 30 minutes." />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
